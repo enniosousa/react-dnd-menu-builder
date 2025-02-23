@@ -71,9 +71,18 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Prepare release folder
+        if: env.CREATE_RELEASE == 'true'
+        run: |
+          mkdir -p release-package
+          cp package.json release-package/
+          cp -r dist release-package/
+          cd release-package
+          zip -r ../release.zip .
+
       - name: Create new release if not exists
         if: env.CREATE_RELEASE == 'true'
         run: |
-          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}" ./package.json ./dist
+          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}" release.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
