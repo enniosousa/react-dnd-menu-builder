@@ -55,3 +55,25 @@ jobs:
           branch: gh-pages
           folder: ./example/demo/build
           clean: true
+
+      - name: Get version from package.json
+        id: get_version
+        run: echo "VERSION=$(jq -r .version package.json)" >> $GITHUB_ENV
+
+      - name: Check if release exists
+        id: check_release
+        run: |
+          if gh release view "v${{ env.VERSION }}" > /dev/null 2>&1; then
+            echo "Release exists"
+          else
+            echo "CREATE_RELEASE=true" >> $GITHUB_ENV
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create new release if not exists
+        if: env.CREATE_RELEASE == 'true'
+        run: |
+          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
