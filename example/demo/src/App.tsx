@@ -113,8 +113,8 @@ const App: React.FC = () => {
 
 export default App;
 
-const generateMenuWithChildren = (menus: Menu[], showIcon: boolean): any => {
-  return menus.map((menu: Menu) => {
+const generateMenuWithChildren = (menus: Menu2[], showIcon: boolean): any => {
+  return menus.map((menu: Menu2) => {
     return {
       key: menu.id,
       label: menu.name,
@@ -138,8 +138,8 @@ const generateMenuWithChildren = (menus: Menu[], showIcon: boolean): any => {
   });
 };
 
-const getAllKeys = (menus: Menu[]) => {
-  return menus.reduce((acc: string[], menu: Menu) => {
+const getAllKeys = (menus: Menu2[]) => {
+  return menus.reduce((acc: string[], menu: Menu2) => {
     acc.push(menu.id);
     if (menu?.children && menu.children.length) {
       acc.push(...getAllKeys(menu.children));
@@ -206,4 +206,4 @@ const initMenus = [
   },
 ];
 // get typescript type from menus
-type Menu = (typeof initMenus)[number];
+type Menu2 = (typeof initMenus)[number];
