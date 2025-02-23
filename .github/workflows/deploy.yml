@@ -74,6 +74,6 @@ jobs:
       - name: Create new release if not exists
         if: env.CREATE_RELEASE == 'true'
         run: |
-          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}"
+          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}" --assets ./package.json ./dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
