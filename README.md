@@ -22,7 +22,6 @@ yarn add react-dnd-menu-builder
 pnpm install react-dnd-menu-builder
 ```
 
-
 ## ⚠️ NextJS Import ⚠️
 
 ```js
@@ -117,18 +116,43 @@ const initialFormData = {
 
 ## Props Documentation
 
-| Property | Types    | Defaults | Description                                |
-| -------- | -------- | -------- | ------------------------------------------ |
-| style    | enum     | null     | "bordered" or "shadow"                     |
-| items    | MenuItem | {}       | Menu Items                                 |
-| setItems | function | null     | Just pass the setState setItems={setMenus} |
+| Property       | Types             | Defaults  | Description                                                           |
+| -------------- | ----------------- | --------- | --------------------------------------------------------------------- |
+| style          | enum              | null      | "bordered" or "shadow"                                                |
+| items          | MenuItem          | {}        | Menu Items                                                            |
+| setItems       | function          | null      | Just pass the setState setItems={setMenus}                            |
+| language       | string            | "en"      | Language                                                              |
+| translations   | DeepPartial<I18n> | undefined | Custom translations or partially replace choosed language translation |
+| urlSuggestions | UrlSuggestion[]   | []        | URL Suggestions                                                       |
 
-```js
+```ts
 type MenuItem = {
-  id: string,
-  name: string,
-  href: string,
-  children?: undefined,
+  id: string;
+  name: string;
+  href: string;
+  children?: undefined;
+};
+interface UrlSuggestion {
+  label: string;
+  value: string;
+}
+interface I18n {
+  label: string;
+  url: string;
+  target: string;
+  id: string;
+  targetOptions: {
+    _blank: string;
+    _self: string;
+    _parent: string;
+    _top: string;
+  };
+  save: string;
+  delete: string;
+  cancel: string;
+}
+type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
 };
 ```
 
