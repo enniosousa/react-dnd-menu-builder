@@ -31,6 +31,14 @@ jobs:
       - name: Navigate to app folder
         run: cd ./example/demo
 
+      - name: Set PUBLIC_URL environment variable
+        run: |
+          if [ -z "${{ secrets.GITHUB_PAGES_CUSTOM_DOMAIN }}" ]; then
+            echo "PUBLIC_URL=/${{ github.event.repository.name }}" >> $GITHUB_ENV
+          else
+            echo "PUBLIC_URL=" >> $GITHUB_ENV
+          fi
+
       - name: Build app
         run: yarn install
         working-directory: ./example/demo
@@ -38,6 +46,8 @@ jobs:
       - name: Build app
         run: yarn build
         working-directory: ./example/demo
+        env:
+          PUBLIC_URL: ${{ env.PUBLIC_URL }}
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
