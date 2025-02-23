@@ -1,8 +1,9 @@
 import React, { forwardRef, HTMLAttributes } from "react";
 import classNames from "classnames";
 import { Collapse } from "./Collapse";
-import { TreeItem as TreeItemType, TreeItems } from "../../types";
+import { I18n, OtherFields, TreeItem as TreeItemType, TreeItems, UrlSuggestion } from "../../types";
 import { UniqueIdentifier } from "@dnd-kit/core";
+import { ActionTargets } from "../../utilities";
 
 export interface Props extends Omit<HTMLAttributes<HTMLLIElement>, "id"> {
   childCount?: number;
@@ -25,7 +26,9 @@ export interface Props extends Omit<HTMLAttributes<HTMLLIElement>, "id"> {
     id: UniqueIdentifier,
     data: Omit<TreeItemType, "children">
   ) => void;
-  otherfields?: any;
+  otherfields?: OtherFields;
+  i18n: I18n;
+  urlSuggestions: UrlSuggestion[];
 }
 
 export const TreeItem = forwardRef<HTMLDivElement, Props>(
@@ -47,17 +50,20 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
       value,
       updateitem,
       wrapperRef,
+      i18n,
       ...props
     },
     ref
   ) => {
     const [open, setOpen] = React.useState(false);
+    const target = props?.otherfields?.target ?? "_self";
     const [newData, setNewData] = React.useState<
       Omit<TreeItemType, "children">
     >({
       id: value,
       href: props?.otherfields?.href,
-      name: props?.otherfields?.name,
+      name: props?.otherfields?.name ?? value,
+      target,
     });
 
     return (
@@ -75,8 +81,8 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
           {
             ...(!clone
               ? {
-                  paddingLeft: `${indentationWidth * depth}px`,
-                }
+                paddingLeft: `${indentationWidth * depth}px`,
+              }
               : {}),
           } as React.CSSProperties
         }
@@ -94,7 +100,12 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                 : "42px",
           }}
         >
-          <span className={"Text"}>
+          <span className={"Text"} title={[
+            `${i18n.label}: ${props?.otherfields?.name}`,
+            `${i18n.url}: ${props?.otherfields?.href}`,
+            `${i18n.target}: ${i18n.targetOptions[target]}`,
+            `${i18n.id}: ${value}`,
+            ].join("\n")}>
             {props?.otherfields?.name}{" "}
             <span
               style={{
@@ -105,7 +116,8 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                 marginLeft: "4px",
               }}
             >
-              {depth > 0 ? "sub item" : ""}
+              {i18n.targetOptions[target]} &bull; {" "}
+              {props?.otherfields?.href}
             </span>
           </span>
           {!clone && onRemove && (
@@ -146,14 +158,19 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                 }}
                 htmlFor="label"
               >
-                Navigation Label
+                {i18n.label}
               </label>
               <input
                 value={newData.name}
                 onChange={(e) => {
-                  setNewData({ ...newData, name: e.target.value });
+                  const name = e.target.value;
+                  const suggestion = props.urlSuggestions.find((suggestion) => suggestion.label === name);
+                  setNewData(old => {
+                    const href = suggestion ? suggestion.value : old.href;
+                    return { ...old, name, href };
+                  });
                 }}
-                type="text"
+                type="search"
                 id="label"
                 style={{
                   border: "1px solid #dcdcde",
@@ -161,7 +178,15 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                   borderRadius: "4px",
                   padding: "0 10px",
                 }}
+                list="nameSuggestions"
               />
+              <datalist id="nameSuggestions">
+                {props.urlSuggestions.map((url) => (
+                  <option key={url.value} value={url.label}>
+                    {url.value}
+                  </option>
+                ))}
+              </datalist>
               <label
                 style={{
                   marginTop: "10px",
@@ -171,14 +196,19 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                 }}
                 htmlFor="href"
               >
-                Navigation Url
+                {i18n.url}
               </label>
               <input
                 value={newData.href}
                 onChange={(e) => {
-                  setNewData({ ...newData, href: e.target.value });
+                  const href = e.target.value;
+                  const suggestion = props.urlSuggestions.find((suggestion) => suggestion.value === href);
+                  setNewData(old => {
+                    const name = suggestion ? suggestion.label : old.name;
+                    return { ...old, href, name };
+                  });
                 }}
-                type="text"
+                type="search"
                 id="href"
                 style={{
                   border: "1px solid #dcdcde",
@@ -186,7 +216,100 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                   borderRadius: "4px",
                   padding: "0 10px",
                 }}
+                list="urlSuggestions"
               />
+              <datalist id="urlSuggestions">
+                {props.urlSuggestions.map((url) => (
+                  <option key={url.value} value={url.value}>
+                    {url.label}
+                  </option>
+                ))}
+              </datalist>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: "12px",
+                }}
+              >
+                {/* target input */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                  }}
+                >
+                  <label
+                    style={{
+                      marginTop: "10px",
+                      marginBottom: "5px",
+                      fontSize: "13px",
+                      color: "#646970",
+                    }}
+                    htmlFor="id"
+                  >
+                    {i18n.target}
+                  </label>
+                  <select
+                    defaultValue="_self"
+                    value={newData.target}
+                    onChange={(e) => {
+                      setNewData({ ...newData, target: e.target.value as typeof ActionTargets[number] });
+                    }}
+                    id="target"
+                    style={{
+                      border: "1px solid #dcdcde",
+                      height: "30px",
+                      borderRadius: "4px",
+                      padding: "0 10px",
+                    }}
+                  >
+                    {ActionTargets.map((target) => (
+                      <option key={target} value={target}>
+                        {i18n.targetOptions[target]}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* id input */}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    width: "100%",
+                  }}
+                >
+                  <label
+                    style={{
+                      marginTop: "10px",
+                      marginBottom: "5px",
+                      fontSize: "13px",
+                      color: "#646970",
+                    }}
+                    htmlFor="id"
+                  >
+                    {i18n.id}
+                  </label>
+                  <input
+                    value={newData.id}
+                    onChange={(e) => {
+                      setNewData({ ...newData, id: e.target.value });
+                    }}
+                    type="text"
+                    id="id"
+                    style={{
+                      border: "1px solid #dcdcde",
+                      height: "30px",
+                      borderRadius: "4px",
+                      padding: "0 10px",
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* buttons */}
               <div
                 style={{
                   display: "flex",
@@ -195,6 +318,7 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                   gap: "12px",
                 }}
               >
+                {/* save button */}
                 <button
                   style={{
                     all: "unset",
@@ -212,8 +336,36 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                     setOpen(false);
                   }}
                 >
-                  Save Menu
+                  {i18n.save}
                 </button>
+
+                {/* cancel button (reset and close) */}
+                <button
+                  style={{
+                    all: "unset",
+                    height: "32px",
+                    backgroundColor: "gray",
+                    color: "white",
+                    padding: "0 12px",
+                    fontSize: "13px",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                  }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setNewData({
+                      id: value,
+                      href: props?.otherfields?.href,
+                      name: props?.otherfields?.name ?? value,
+                      target,
+                    });
+                    setOpen(false);
+                  }}
+                >
+                  {i18n.cancel}
+                </button>
+
+                {/* delete button */}
                 <button
                   style={{
                     all: "unset",
@@ -229,7 +381,7 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
                     onRemove && onRemove();
                   }}
                 >
-                  Delete Menu
+                  {i18n.delete}
                 </button>
               </div>
             </div>

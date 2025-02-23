@@ -37,14 +37,18 @@ import {
   getChildrens,
 } from "./utilities";
 import type {
+  DeepPartial,
   FlattenedItem,
+  I18n,
   SensorContext,
   TreeItem,
   TreeItems,
+  UrlSuggestion,
 } from "./types";
 import { sortableTreeKeyboardCoordinates } from "./keyboardCoordinates";
 import { SortableTreeItem } from "./components";
 import { CSS } from "@dnd-kit/utilities";
+import { i18ns } from "./i18n";
 
 const measuring = {
   droppable: {
@@ -79,13 +83,26 @@ interface Props {
   style?: "bordered" | "shadow";
   items: TreeItems;
   setItems(items: ((items: any) => TreeItem[]) | TreeItems): void;
+  language?: keyof typeof i18ns;
+  translations?: DeepPartial<I18n>;
+  urlSuggestions?: UrlSuggestion[];
 }
 
 export function MenuBuilder({
   style = "bordered",
   items: itemsProps,
   setItems,
+  language = "en",
+  translations,
+  urlSuggestions = [],
 }: Props) {
+  const i18n = {
+    ...i18ns[language], ...translations, targetOptions: {
+      ...i18ns[language].targetOptions,
+      ...translations?.targetOptions,
+    }
+  };
+
   const items = generateItemChildren(itemsProps);
   const indentationWidth = 50;
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
@@ -108,6 +125,7 @@ export function MenuBuilder({
         item.id = data.id;
         item.name = data.name;
         item.href = data.href;
+        item.target = data.target;
       }
 
       if (item?.children?.length) {
@@ -136,12 +154,12 @@ export function MenuBuilder({
   const projected =
     activeId && overId
       ? getProjection(
-          flattenedItems,
-          activeId,
-          overId,
-          offsetLeft,
-          indentationWidth
-        )
+        flattenedItems,
+        activeId,
+        overId,
+        offsetLeft,
+        indentationWidth
+      )
       : null;
   const sensorContext: SensorContext = useRef({
     items: flattenedItems,
@@ -236,6 +254,8 @@ export function MenuBuilder({
                 onCollapse={undefined}
                 childCount={getChildCount(items, activeId) + 1}
                 onRemove={() => handleRemove(id)}
+                i18n={i18n}
+                urlSuggestions={urlSuggestions}
               />
             )
           )}
@@ -255,6 +275,8 @@ export function MenuBuilder({
                   otherfields={activeItem}
                   indentationWidth={indentationWidth}
                   childs={getChildrens(items, activeId)}
+                  i18n={i18n}
+                  urlSuggestions={urlSuggestions}
                 />
               ) : null}
             </DragOverlay>,

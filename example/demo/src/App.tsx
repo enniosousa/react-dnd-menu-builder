@@ -1,17 +1,14 @@
 import React, { useState } from "react";
 import {
-  DesktopOutlined,
   ContactsFilled,
   GithubOutlined,
-  TeamOutlined,
-  PhoneFilled,
 } from "@ant-design/icons";
 import type { MenuProps } from "antd";
-import { Breadcrumb, FloatButton, Layout, Menu, theme, Tooltip } from "antd";
+import { FloatButton, Layout, Menu, theme, Tooltip } from "antd";
 import MenuBuilder from "./components/MenuBuilder";
 import Logo from "./components/Logo";
 
-const { Header, Content, Footer, Sider } = Layout;
+const { Header, Content, Sider } = Layout;
 
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -136,6 +133,7 @@ const generateMenuWithChildren = (menus: Menu[], showIcon: boolean): any => {
         menu?.children && menu?.children.length
           ? generateMenuWithChildren(menu.children, showIcon)
           : undefined,
+      
     } as MenuItem;
   });
 };
@@ -155,6 +153,7 @@ const initMenus = [
     id: "Home",
     name: "Home",
     href: "/home",
+    target: "_blank",
   },
   {
     id: "Collections",
