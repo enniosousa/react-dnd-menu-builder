@@ -76,13 +76,27 @@ jobs:
         run: |
           mkdir -p release-package
           cp package.json release-package/
+          cp LICENSE release-package/
+          cp README.md release-package/
           cp -r dist release-package/
-          cd release-package
-          zip -r ../release.zip .
+
+      - name: Deploy to GitHub release branch
+        if: env.CREATE_RELEASE == 'true'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: releases
+          folder: ./release-package
+          clean: true
+          commit-message: "Release v${{ env.VERSION }}"
+
+      - name: Checkout releases branch
+        uses: actions/checkout@v4
+        with:
+          ref: releases
 
       - name: Create new release if not exists
         if: env.CREATE_RELEASE == 'true'
         run: |
-          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}" release.zip
+          gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
