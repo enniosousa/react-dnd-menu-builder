@@ -89,13 +89,18 @@ jobs:
           clean: true
           commit-message: "Release v${{ env.VERSION }}"
 
+  create-release:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    # if: github.ref == 'refs/heads/releases'
+
+    steps:
       - name: Checkout releases branch
         uses: actions/checkout@v4
         with:
           ref: releases
 
-      - name: Create new release if not exists
-        if: env.CREATE_RELEASE == 'true'
+      - name: Create new GitHub release
         run: |
           gh release create "v${{ env.VERSION }}" --title "Release v${{ env.VERSION }}" --notes "New release v${{ env.VERSION }}"
         env:
